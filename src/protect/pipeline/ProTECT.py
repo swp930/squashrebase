@@ -306,6 +306,7 @@ def _parse_config_file(job, config_file, max_cores=None):
     :rtype: tuple(dict, dict, dict)
     """
     job.fileStore.logToMaster('Parsing config file')
+
     config_file = os.path.abspath(config_file)
     if not os.path.exists(config_file):
         raise ParameterError('The config file was not found at specified location. Please verify ' +
@@ -417,6 +418,7 @@ def _parse_config_file(job, config_file, max_cores=None):
     process_tool_inputs = job.addChildJobFn(get_all_tool_inputs, tool_options,
                                             mutation_caller_list=mutation_caller_list)
     job.fileStore.logToMaster('Obtained tool inputs')
+
     return sample_set, univ_options, process_tool_inputs.rv()
 
 
@@ -581,6 +583,7 @@ def launch_protect(job, patient_data, univ_options, tool_options):
     rsem.addChild(delete_bam_files['tumor_rna'])
     if fusions:
         fusions.addChild(delete_bam_files['tumor_rna'])
+
     # Define the reporting leaves
     if phlat_files['tumor_rna'] is not None:
         mhc_pathway_assessment = job.wrapJobFn(run_mhc_gene_assessment, rsem.rv(),
@@ -602,6 +605,7 @@ def launch_protect(job, patient_data, univ_options, tool_options):
                                               univ_options, tool_options['reports'],
                                               disk='100M', memory='100M', cores=1)
     rsem.addChild(car_t_validity_assessment)
+
     # Define the DNA-Seq alignment and mutation calling subgraphs if necessary
     if 'mutation_vcf' in patient_data:
         get_mutations = job.wrapJobFn(get_patient_vcf, sample_prep.rv())
@@ -950,6 +954,10 @@ def generate_config_file():
 def main():
     """
     This is the main function for ProTECT.
+
+    JobStore:
+        ProTECT uses shared storage via the job.fileStore object.
+
     """
     parser = argparse.ArgumentParser(prog='ProTECT',
                                      description='Prediction of T-Cell Epitopes for Cancer Therapy',
@@ -989,6 +997,7 @@ def main():
                     params.max_cores = int(params.maxCores)
         start = Job.wrapJobFn(parse_config_file, params.config_file, params.max_cores)
         Job.Runner.startToil(start, params)
+
     return None
 
 
